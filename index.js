@@ -141,6 +141,7 @@ const buildSwipeDom = (mfc)=>{
                         mes.name,
                         false,
                         mes.is_user,
+                        null,
                     );
                     document.querySelector('#chat .last_mes .mes_text').innerHTML = messageText;
                     saveChatConditional();
