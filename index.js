@@ -413,11 +413,11 @@ const addSwipesButtons = ()=>{
 };
 const addSwipesButton = (mesIdx, isForced = false)=>{
     const container = document.querySelector(`#chat > .mes[mesid="${mesIdx}"] .extraMesButtons`);
-    if (!isForced && container.querySelector('.mfc--button')) return;
-    Array.from(container.querySelectorAll('.mfc--button')).forEach(it=>it.remove());
+    if (!isForced && container.querySelector('.mfc--swipes')) return;
+    Array.from(container.querySelectorAll('.mfc--swipes')).forEach(it=>it.remove());
     const mes = chat[mesIdx];
     const btn = document.createElement('div'); {
-        btn.classList.add('mfc--button', 'mfc--mes_swipes', 'fa-solid', 'fa-layer-group');
+        btn.classList.add('mfc--swipes', 'fa-solid', 'fa-layer-group');
         btn.title = `View swipes (${mes.swipes?.length ?? 0})`;
         btn.addEventListener('click', async(evt)=>{
             const dom = document.createElement('div'); {
