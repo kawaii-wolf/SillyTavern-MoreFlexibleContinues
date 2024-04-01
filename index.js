@@ -204,7 +204,8 @@ const buildSwipeDom = (mfc)=>{
                 if (busy()) return;
                 log('[SWIPES]');
 
-                const mes = chat.slice(-1)[0];
+                // const mes = chat.slice(-1)[0];
+                const mes = chat[Number(swipesTrigger.closest('[mesid]').getAttribute('mesid'))];
                 if (mes.continueHistory[mes.swipe_id ?? 0]) {
                     const renderTree = (swipe, act, isRoot=false)=>{
                         const el = document.createElement('div'); {
@@ -236,7 +237,7 @@ const buildSwipeDom = (mfc)=>{
                                         mes.is_user,
                                         null,
                                     );
-                                    document.querySelector('#chat .last_mes .mes_text').innerHTML = messageText;
+                                    swipesTrigger.closest('[mesid]').querySelector('.mes_text').innerHTML = messageText;
                                     saveChatConditional();
                                     eventSource.emit(event_types.MESSAGE_EDITED, chat.length - 1);
                                 });
@@ -298,21 +299,22 @@ const makeSwipeDom = ()=>{
     for (const mes of chat) {
         insertContinueData(mes);
     }
-    Array.from(document.querySelectorAll('#chat .mes:not(.last_mes) .mfc--root')).forEach(it=>it.remove());
-    const el = document.querySelector('#chat .last_mes');
-    const elTop = el.querySelector('.name_text').parentElement;
-    const elBot = el;
+    const els = Array.from(document.querySelectorAll('#chat .mes'));
+    for (const el of els) {
+        const elTop = el.querySelector('.name_text').parentElement;
+        const elBot = el;
 
-    if (settings.buttonsTop && !el.querySelector('.mfc--root[data-mfc="top"]')) {
-        elTop.append(buildSwipeDom('top'));
-    } else if (!settings.buttonsTop && el.querySelector('.mfc--root[data-mfc="top"]')) {
-        el.querySelector('.mfc--root[data-mfc="top"]').remove();
-    }
+        if (settings.buttonsTop && !el.querySelector('.mfc--root[data-mfc="top"]')) {
+            elTop.append(buildSwipeDom('top'));
+        } else if (!settings.buttonsTop && el.querySelector('.mfc--root[data-mfc="top"]')) {
+            el.querySelector('.mfc--root[data-mfc="top"]').remove();
+        }
 
-    if (settings.buttonsBottom && !el.querySelector('.mfc--root[data-mfc="bottom"]')) {
-        elBot.append(buildSwipeDom('bottom'));
-    } else if (!settings.buttonsBottom && el.querySelector('.mfc--root[data-mfc="bottom"]')) {
-        el.querySelector('.mfc--root[data-mfc="bottom"]').remove();
+        if (settings.buttonsBottom && !el.querySelector('.mfc--root[data-mfc="bottom"]')) {
+            elBot.append(buildSwipeDom('bottom'));
+        } else if (!settings.buttonsBottom && el.querySelector('.mfc--root[data-mfc="bottom"]')) {
+            el.querySelector('.mfc--root[data-mfc="bottom"]').remove();
+        }
     }
 };
 
