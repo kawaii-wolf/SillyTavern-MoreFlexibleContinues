@@ -350,68 +350,66 @@ const onMessageDone = async(mesIdx)=>{
 
 const onMessageEdited = async(mesIdx)=>{
     log('[MESSAGE_EDITED]', mesIdx);
-    if (Number(mesIdx) + 1 == chat.length) {
-        // check how much of the beginning of the message is still intact
-        let swipes = chat[mesIdx].continueHistory;
-        let swipe;
-        let text = '';
-        const active = [];
-        for (const idx of chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active) {
-            swipe = swipes[idx];
-            const newText = `${text}${swipes[idx].mes}`;
-            if (!chat[mesIdx].mes.startsWith(newText) && !(swipe.parent.length == 0 && newText == '')) {
-                const newSwipe = {
-                    mes: chat[mesIdx].mes.substring(text.length),
-                    parent: [...swipe.parent],
-                    swipes: [],
-                };
-                if (swipe.parent.length == 0) {
-                    const newIdx = 1;
-                    newSwipe.parent = [chat[mesIdx].swipe_id ?? 0];
-                    const unshiftParent = (childSwipes)=>{
-                        for (const childSwipe of childSwipes) {
-                            childSwipe.parent.unshift(chat[mesIdx].swipe_id ?? 0);
-                            unshiftParent(childSwipe.swipes);
-                        }
-                    };
-                    unshiftParent(swipes);
-                    swipes[idx] = {
-                        mes: '',
-                        parent: [],
-                        swipes: [swipe, newSwipe],
-                        active: [chat[mesIdx].swipe_id ?? 0, newIdx],
-                    };
-                    delete swipe.active;
-                    chat[mesIdx].continueSwipe = newSwipe;
-                    chat[mesIdx].continueSwipeId = newIdx;
-                    text = chat[mesIdx].mes;
-                } else {
-                    const newIdx = swipes.length;
-                    swipes.push(newSwipe);
-                    active.push(newIdx);
-                    chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active = active;
-                    chat[mesIdx].continueSwipe = newSwipe;
-                    chat[mesIdx].continueSwipeId = newIdx;
-                    text = chat[mesIdx].mes;
-                }
-                break;
-            }
-            active.push(idx);
-            swipes = swipe.swipes;
-            text = newText;
-        }
-
-        if (text.length < chat[mesIdx].mes.length) {
+    // check how much of the beginning of the message is still intact
+    let swipes = chat[mesIdx].continueHistory;
+    let swipe;
+    let text = '';
+    const active = [];
+    for (const idx of chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active) {
+        swipe = swipes[idx];
+        const newText = `${text}${swipes[idx].mes}`;
+        if (!chat[mesIdx].mes.startsWith(newText) && !(swipe.parent.length == 0 && newText == '')) {
             const newSwipe = {
                 mes: chat[mesIdx].mes.substring(text.length),
-                parent: [...swipe.parent, active.slice(-1)[0]],
+                parent: [...swipe.parent],
                 swipes: [],
             };
-            swipe.swipes.push(newSwipe);
-            chat[mesIdx].continueSwipe = newSwipe;
-            chat[mesIdx].continueSwipeId = swipe.swipes.length - 1;
-            chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active = [...newSwipe.parent, swipe.swipes.length - 1];
+            if (swipe.parent.length == 0) {
+                const newIdx = 1;
+                newSwipe.parent = [chat[mesIdx].swipe_id ?? 0];
+                const unshiftParent = (childSwipes)=>{
+                    for (const childSwipe of childSwipes) {
+                        childSwipe.parent.unshift(chat[mesIdx].swipe_id ?? 0);
+                        unshiftParent(childSwipe.swipes);
+                    }
+                };
+                unshiftParent(swipes);
+                swipes[idx] = {
+                    mes: '',
+                    parent: [],
+                    swipes: [swipe, newSwipe],
+                    active: [chat[mesIdx].swipe_id ?? 0, newIdx],
+                };
+                delete swipe.active;
+                chat[mesIdx].continueSwipe = newSwipe;
+                chat[mesIdx].continueSwipeId = newIdx;
+                text = chat[mesIdx].mes;
+            } else {
+                const newIdx = swipes.length;
+                swipes.push(newSwipe);
+                active.push(newIdx);
+                chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active = active;
+                chat[mesIdx].continueSwipe = newSwipe;
+                chat[mesIdx].continueSwipeId = newIdx;
+                text = chat[mesIdx].mes;
+            }
+            break;
         }
+        active.push(idx);
+        swipes = swipe.swipes;
+        text = newText;
+    }
+
+    if (text.length < chat[mesIdx].mes.length) {
+        const newSwipe = {
+            mes: chat[mesIdx].mes.substring(text.length),
+            parent: [...swipe.parent, active.slice(-1)[0]],
+            swipes: [],
+        };
+        swipe.swipes.push(newSwipe);
+        chat[mesIdx].continueSwipe = newSwipe;
+        chat[mesIdx].continueSwipeId = swipe.swipes.length - 1;
+        chat[mesIdx].continueHistory[chat[mesIdx].swipe_id ?? 0].active = [...newSwipe.parent, swipe.swipes.length - 1];
     }
 };
 
