@@ -1,5 +1,6 @@
-import { Generate, callPopup, chat, eventSource, event_types, messageFormatting, saveChatConditional, saveSettingsDebounced, substituteParams } from '../../../../script.js';
+import { Generate, callPopup, chat, eventSource, event_types, messageFormatting, saveChatConditional, saveChatDebounced, saveSettingsDebounced, substituteParams } from '../../../../script.js';
 import { extension_settings } from '../../../extensions.js';
+import { delay } from '../../../utils.js';
 import { ContextMenu } from './src/ContextMenu.js';
 import { MenuItem } from './src/MenuItem.js';
 
@@ -105,7 +106,7 @@ const onHover = ()=>{
     }
 };
 
-const buildSwipeDom = (mfc)=>{
+const buildSwipeDom = (mfc, el)=>{
     const dom = document.createElement('div'); {
         dom.classList.add('mfc--root');
         dom.setAttribute('data-mfc', mfc);
@@ -292,6 +293,36 @@ const buildSwipeDom = (mfc)=>{
             });
             dom.append(cont);
         }
+        const fav = document.createElement('span'); {
+            fav.classList.add('mfc--fav');
+            fav.classList.add('mfc--action');
+            const updateFav = (e = null)=>{
+                const mes = chat[Number(el.getAttribute('mesid'))];
+                const isFav = mes.swipe_info?.[mes.swipe_id]?.extra?.isFavorite ?? false;
+                Array.from([e, ...el.querySelectorAll('.mfc--fav')].filter(it=>it)).forEach(it=>it.classList[isFav ? 'add' : 'remove']('mfc--isFav'));
+            };
+            updateFav(fav);
+            eventSource.on(event_types.MESSAGE_SWIPED, ()=>updateFav());
+            fav.textContent = '⭐';
+            fav.title = 'Favorite this swipe';
+            fav.addEventListener('click', ()=>{
+                const mes = chat[Number(swipesTrigger.closest('[mesid]').getAttribute('mesid'))];
+                if (!mes.swipe_info) {
+                    mes.swipe_info = [];
+                }
+                if (!mes.swipe_info[mes.swipe_id]) {
+                    mes.swipe_info[mes.swipe_id] = {};
+                }
+                if (!mes.swipe_info[mes.swipe_id].extra) {
+                    mes.swipe_info[mes.swipe_id].extra = {};
+                }
+                const isFav = mes.swipe_info[mes.swipe_id].extra.isFavorite;
+                mes.swipe_info[mes.swipe_id].extra.isFavorite = !isFav;
+                updateFav();
+                saveChatDebounced();
+            });
+            dom.append(fav);
+        }
     }
     return dom;
 };
@@ -305,13 +336,13 @@ const makeSwipeDom = ()=>{
         const elBot = el;
 
         if (settings.buttonsTop && !el.querySelector('.mfc--root[data-mfc="top"]')) {
-            elTop.append(buildSwipeDom('top'));
+            elTop.append(buildSwipeDom('top', el));
         } else if (!settings.buttonsTop && el.querySelector('.mfc--root[data-mfc="top"]')) {
             el.querySelector('.mfc--root[data-mfc="top"]').remove();
         }
 
         if (settings.buttonsBottom && !el.querySelector('.mfc--root[data-mfc="bottom"]')) {
-            elBot.append(buildSwipeDom('bottom'));
+            elBot.append(buildSwipeDom('bottom', el));
         } else if (!settings.buttonsBottom && el.querySelector('.mfc--root[data-mfc="bottom"]')) {
             el.querySelector('.mfc--root[data-mfc="bottom"]').remove();
         }
@@ -446,10 +477,17 @@ const addSwipesButton = (mesIdx, isForced = false)=>{
         btn.addEventListener('click', async(evt)=>{
             const dom = document.createElement('div'); {
                 dom.classList.add('mfc--swipesModal');
+                const notice = document.createElement('div'); {
+                    notice.textContent = 'Click to copy swipe';
+                    dom.append(notice);
+                }
                 (mes.swipes ?? []).forEach((text, idx)=>{
                     const swipe = document.createElement('div'); {
                         swipe.classList.add('mfc--swipe');
                         swipe.classList.add('mes_text');
+                        if (mes.swipe_info?.[idx]?.extra?.isFavorite) {
+                            swipe.classList.add('mfc--isFav');
+                        }
                         if (idx == mes.swipe_id) {
                             swipe.classList.add('mfc--current');
                         }
@@ -459,8 +497,28 @@ const addSwipesButton = (mesIdx, isForced = false)=>{
                             mes.name,
                             false,
                             mes.is_user,
+                            null,
                         );
                         swipe.innerHTML = messageText;
+                        swipe.addEventListener('click', async()=>{
+                            const ta = document.createElement('textarea'); {
+                                ta.value = text;
+                                ta.style.position = 'fixed';
+                                ta.style.inset = '0';
+                                document.body.append(ta);
+                                ta.focus();
+                                ta.select();
+                                try {
+                                    document.execCommand('copy');
+                                } catch (err) {
+                                    console.error('Unable to copy to clipboard', err);
+                                }
+                                ta.remove();
+                            }
+                            swipe.classList.add('mfc--flash');
+                            await delay(1000);
+                            swipe.classList.remove('mfc--flash');
+                        });
                         dom.append(swipe);
                     }
                 });

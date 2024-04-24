@@ -16,7 +16,7 @@
 		bottom: 0.125em;
 		left: 0.5em;
 	}
-	> .mfc--action:not(.mfc--swipes) {
+	> .mfc--action:not(.mfc--swipes,.mfc--fav) {
 		display: none;
 	}
 	.last_mes & > .mfc--action {
@@ -60,6 +60,14 @@
 	opacity: 0.75;
 	&:hover {
 		opacity: 1;
+	}
+
+	&.mfc--fav {
+		filter: grayscale(1);
+		transition: 200ms;
+		&.mfc--isFav {
+			filter: grayscale(0);
+		}
 	}
 }
 .mfc--branchPoint {
@@ -212,6 +220,7 @@
 
 .mfc--swipesModal {
 	.mfc--swipe {
+		cursor: pointer;
 		border: 1px solid var(--SmartThemeBorderColor);
 		border-radius: 10px;
 		padding: 10px;
@@ -219,6 +228,14 @@
 		opacity: 0.5;
 		transition: 200ms;
 		margin-bottom: 1em;
+		position: relative;
+		margin-left: 0.7em;
+		&.mfc--isFav:before {
+			content: '⭐';
+			position: absolute;
+			top: 0;
+			left: -0.9em;
+		}
 		&:hover {
 			opacity: 1;
 		}
