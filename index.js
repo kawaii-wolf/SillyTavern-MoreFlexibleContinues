@@ -201,7 +201,7 @@ const buildSwipeDom = (mfc, el)=>{
             swipesTrigger.classList.add('mfc--action');
             swipesTrigger.textContent = '▤';
             swipesTrigger.title = 'Show continues';
-            swipesTrigger.addEventListener('click', (evt)=>{
+            swipesTrigger.addEventListener('click', async(evt)=>{
                 if (busy()) return;
                 log('[SWIPES]');
 
@@ -215,7 +215,7 @@ const buildSwipeDom = (mfc, el)=>{
                             el.classList.add('mfc--ctx-item');
                             const txt = document.createElement('div'); {
                                 txt.classList.add('mfc--treeText');
-                                txt.textContent = swipe.mes;
+                                txt.textContent = swipe.mes.trim();
                                 txt.addEventListener('click', ()=>{
                                     let mesmes = '';
                                     let ss = mes.continueHistory;
@@ -272,9 +272,15 @@ const buildSwipeDom = (mfc, el)=>{
                         });
                         const content = renderTree(mes.continueHistory[mes.swipe_id ?? 0], mes.continueHistory[mes.swipe_id ?? 0].active.slice(1), true);
                         blocker.append(content);
-                        content.style.top = `${swipesTrigger.getBoundingClientRect().bottom}px`;
-                        content.style.left = `${swipesTrigger.getBoundingClientRect().right}px`;
+                        const rect = swipesTrigger.getBoundingClientRect();
+                        content.style.setProperty('--triggerTop', `${rect.bottom}px`);
+                        content.style.setProperty('--triggerRight', `${rect.right}px`);
+                        content.classList[rect.top > window.innerHeight / 2 ? 'add' : 'remove']('mfc--flipV');
+                        // content.style.top = `${swipesTrigger.getBoundingClientRect().bottom}px`;
+                        // content.style.left = `${swipesTrigger.getBoundingClientRect().right}px`;
                         document.body.append(blocker);
+                        await new Promise(resolve=>requestAnimationFrame(resolve));
+
                     }
                 }
             });
