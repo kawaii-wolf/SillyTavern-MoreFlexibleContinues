@@ -585,12 +585,12 @@ eventSource.on(event_types.APP_READY, ()=>{
     };
     addSettings();
 
-    eventSource.on(event_types.GENERATION_STARTED, (...args)=>{log('GENERATION_STARTED', args);onGenerationStarted(...args)});
-    eventSource.on(event_types.GENERATION_STOPPED, (...args)=>{log('GENERATION_STOPPED', args);onMessageDone(...args)});
-    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, (...args)=>{log('CHARACTER_MESSAGE_RENDERED', args);onMessageDone(...args)});
-    eventSource.on(event_types.USER_MESSAGE_RENDERED, (...args)=>{log('USER_MESSAGE_RENDERED', args);onMessageDone(...args)});
-    eventSource.on(event_types.MESSAGE_EDITED, (...args)=>{log('MESSAGE_EDITED', args);onMessageEdited(...args)});
-    eventSource.on(event_types.CHAT_CHANGED, (...args)=>{log('CHAT_CHANGED', args);onChatChanged();});
-    eventSource.on(event_types.MESSAGE_DELETED, (...args)=>{log('MESSAGE_DELETED', args);makeSwipeDom(...args)});
-    eventSource.on(event_types.MESSAGE_SWIPED, (...args)=>{log('MESSAGE_SWIPED', args);onSwipe(...args)});
+    eventSource.on(event_types.GENERATION_STARTED, async(...args)=>{log('GENERATION_STARTED', args);onGenerationStarted(...args);return;});
+    eventSource.on(event_types.GENERATION_STOPPED, async(...args)=>{log('GENERATION_STOPPED', args);onMessageDone(...args);return;});
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async(...args)=>{log('CHARACTER_MESSAGE_RENDERED', args);onMessageDone(...args);return;});
+    eventSource.on(event_types.USER_MESSAGE_RENDERED, async(...args)=>{log('USER_MESSAGE_RENDERED', args);onMessageDone(...args);return;});
+    eventSource.on(event_types.MESSAGE_EDITED, async(...args)=>{log('MESSAGE_EDITED', args);onMessageEdited(...args);return;});
+    eventSource.on(event_types.CHAT_CHANGED, async(...args)=>{log('CHAT_CHANGED', args);onChatChanged();;return;});
+    eventSource.on(event_types.MESSAGE_DELETED, async(...args)=>{log('MESSAGE_DELETED', args);makeSwipeDom(...args);return;});
+    eventSource.on(event_types.MESSAGE_SWIPED, async(...args)=>{log('MESSAGE_SWIPED', args);onSwipe(...args);return;});
 });
