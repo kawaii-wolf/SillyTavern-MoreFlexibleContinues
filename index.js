@@ -590,7 +590,7 @@ eventSource.on(event_types.APP_READY, ()=>{
     eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async(...args)=>{log('CHARACTER_MESSAGE_RENDERED', args);onMessageDone(...args);return;});
     eventSource.on(event_types.USER_MESSAGE_RENDERED, async(...args)=>{log('USER_MESSAGE_RENDERED', args);onMessageDone(...args);return;});
     eventSource.on(event_types.MESSAGE_EDITED, async(...args)=>{log('MESSAGE_EDITED', args);onMessageEdited(...args);return;});
-    eventSource.on(event_types.CHAT_CHANGED, async(...args)=>{log('CHAT_CHANGED', args);onChatChanged();;return;});
+    eventSource.on(event_types.CHAT_CHANGED, async(...args)=>{log('CHAT_CHANGED', args);onChatChanged();return;});
     eventSource.on(event_types.MESSAGE_DELETED, async(...args)=>{log('MESSAGE_DELETED', args);makeSwipeDom(...args);return;});
     eventSource.on(event_types.MESSAGE_SWIPED, async(...args)=>{log('MESSAGE_SWIPED', args);onSwipe(...args);return;});
 });
