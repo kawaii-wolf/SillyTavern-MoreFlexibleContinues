@@ -302,17 +302,11 @@ const buildSwipeDom = (mfc, el)=>{
         const fav = document.createElement('span'); {
             fav.classList.add('mfc--fav');
             fav.classList.add('mfc--action');
-            const updateFav = (e = null)=>{
-                const mes = chat[Number(el.getAttribute('mesid'))];
-                const isFav = mes.swipe_info?.[mes.swipe_id]?.extra?.isFavorite ?? false;
-                Array.from([e, ...el.querySelectorAll('.mfc--fav')].filter(it=>it)).forEach(it=>it.classList[isFav ? 'add' : 'remove']('mfc--isFav'));
-            };
-            updateFav(fav);
-            eventSource.on(event_types.MESSAGE_SWIPED, ()=>updateFav());
             fav.textContent = '⭐';
             fav.title = 'Favorite this swipe';
             fav.addEventListener('click', ()=>{
-                const mes = chat[Number(swipesTrigger.closest('[mesid]').getAttribute('mesid'))];
+                const mesId = Number(swipesTrigger.closest('[mesid]').getAttribute('mesid'));
+                const mes = chat[mesId];
                 if (!mes.swipe_info) {
                     mes.swipe_info = [];
                 }
@@ -324,7 +318,7 @@ const buildSwipeDom = (mfc, el)=>{
                 }
                 const isFav = mes.swipe_info[mes.swipe_id].extra.isFavorite;
                 mes.swipe_info[mes.swipe_id].extra.isFavorite = !isFav;
-                updateFav();
+                updateFav(mesId);
                 saveChatDebounced();
             });
             dom.append(fav);
@@ -352,7 +346,15 @@ const makeSwipeDom = ()=>{
         } else if (!settings.buttonsBottom && el.querySelector('.mfc--root[data-mfc="bottom"]')) {
             el.querySelector('.mfc--root[data-mfc="bottom"]').remove();
         }
+        updateFav(el.getAttribute('mesid'));
     }
+};
+
+const updateFav = (mesId)=>{
+    const mes = chat[mesId];
+    const isFav = mes.swipe_info?.[mes.swipe_id]?.extra?.isFavorite ?? false;
+    const favButtons = [...document.querySelectorAll(`#chat .mes[mesid="${mesId}"] .mfc--fav`)];
+    favButtons.forEach(it=>it.classList[isFav ? 'add' : 'remove']('mfc--isFav'));
 };
 
 const onMessageDone = async(mesIdx)=>{
@@ -452,9 +454,27 @@ const onMessageEdited = async(mesIdx)=>{
     }
 };
 
-const onSwipe = async(...args)=>{
+const onSwipe = async(mesId)=>{
     log('swipe');
-    const mes = chat.slice(-1)[0];
+    let isGen = false;
+    eventSource.once(event_types.GENERATION_STARTED, ()=>isGen = true);
+    await delay (100);
+    const mes = chat[mesId];
+    if (isGen) {
+        // a vanilla swipe simply copies the previous swipe's `extra` object
+        // if the previous swipe was a favorite the new one will be marked as favorite, too...
+        if (!mes.swipe_info) {
+            mes.swipe_info = [];
+        }
+        if (!mes.swipe_info[mes.swipe_id]) {
+            mes.swipe_info[mes.swipe_id] = {};
+        }
+        if (!mes.swipe_info[mes.swipe_id].extra) {
+            mes.swipe_info[mes.swipe_id].extra = {};
+        }
+        mes.swipe_info[mes.swipe_id].extra.isFavorite = false;
+        updateFav(mesId);
+    }
     if (mes.continueHistory) {
         let swipes = mes.continueHistory;
         let swipe;
@@ -584,6 +604,7 @@ eventSource.on(event_types.APP_READY, ()=>{
         });
     };
     addSettings();
+    onChatChanged();
 
     eventSource.on(event_types.GENERATION_STARTED, async(...args)=>{log('GENERATION_STARTED', args);onGenerationStarted(...args);return;});
     eventSource.on(event_types.GENERATION_STOPPED, async(...args)=>{log('GENERATION_STOPPED', args);onMessageDone(...args);return;});
@@ -591,6 +612,6 @@ eventSource.on(event_types.APP_READY, ()=>{
     eventSource.on(event_types.USER_MESSAGE_RENDERED, async(...args)=>{log('USER_MESSAGE_RENDERED', args);onMessageDone(...args);return;});
     eventSource.on(event_types.MESSAGE_EDITED, async(...args)=>{log('MESSAGE_EDITED', args);onMessageEdited(...args);return;});
     eventSource.on(event_types.CHAT_CHANGED, async(...args)=>{log('CHAT_CHANGED', args);onChatChanged();return;});
-    eventSource.on(event_types.MESSAGE_DELETED, async(...args)=>{log('MESSAGE_DELETED', args);makeSwipeDom(...args);return;});
+    eventSource.on(event_types.MESSAGE_DELETED, async(...args)=>{log('MESSAGE_DELETED', args);return makeSwipeDom(...args);});
     eventSource.on(event_types.MESSAGE_SWIPED, async(...args)=>{log('MESSAGE_SWIPED', args);onSwipe(...args);return;});
 });
