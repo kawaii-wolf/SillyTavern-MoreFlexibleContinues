@@ -473,8 +473,8 @@ const onSwipe = async(mesId)=>{
             mes.swipe_info[mes.swipe_id].extra = {};
         }
         mes.swipe_info[mes.swipe_id].extra.isFavorite = false;
-        updateFav(mesId);
     }
+    updateFav(mesId);
     if (mes.continueHistory) {
         let swipes = mes.continueHistory;
         let swipe;
