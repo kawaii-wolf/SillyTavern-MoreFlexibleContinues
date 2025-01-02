@@ -313,11 +313,8 @@ const buildSwipeDom = (mfc, el)=>{
                 if (!mes.swipe_info[mes.swipe_id]) {
                     mes.swipe_info[mes.swipe_id] = {};
                 }
-                if (!mes.swipe_info[mes.swipe_id].extra) {
-                    mes.swipe_info[mes.swipe_id].extra = {};
-                }
-                const isFav = mes.swipe_info[mes.swipe_id].extra.isFavorite;
-                mes.swipe_info[mes.swipe_id].extra.isFavorite = !isFav;
+                const isFav = mes.swipe_info[mes.swipe_id].isFavorite;
+                mes.swipe_info[mes.swipe_id].isFavorite = !isFav;
                 updateFav(mesId);
                 saveChatDebounced();
             });
@@ -352,7 +349,7 @@ const makeSwipeDom = ()=>{
 
 const updateFav = (mesId)=>{
     const mes = chat[mesId];
-    const isFav = mes.swipe_info?.[mes.swipe_id]?.extra?.isFavorite ?? false;
+    const isFav = mes.swipe_info?.[mes.swipe_id]?.isFavorite ?? false;
     const favButtons = [...document.querySelectorAll(`#chat .mes[mesid="${mesId}"] .mfc--fav`)];
     favButtons.forEach(it=>it.classList[isFav ? 'add' : 'remove']('mfc--isFav'));
 };
@@ -472,7 +469,7 @@ const onSwipe = async(mesId)=>{
         if (!mes.swipe_info[mes.swipe_id].extra) {
             mes.swipe_info[mes.swipe_id].extra = {};
         }
-        mes.swipe_info[mes.swipe_id].extra.isFavorite = false;
+        mes.swipe_info[mes.swipe_id].isFavorite = false;
     }
     updateFav(mesId);
     if (mes.continueHistory) {
@@ -511,7 +508,7 @@ const addSwipesButton = (mesIdx, isForced = false)=>{
                     const swipe = document.createElement('div'); {
                         swipe.classList.add('mfc--swipe');
                         swipe.classList.add('mes_text');
-                        if (mes.swipe_info?.[idx]?.extra?.isFavorite) {
+                        if (mes.swipe_info?.[idx]?.isFavorite) {
                             swipe.classList.add('mfc--isFav');
                         }
                         if (idx == mes.swipe_id) {
@@ -556,6 +553,20 @@ const addSwipesButton = (mesIdx, isForced = false)=>{
 };
 
 const onChatChanged = ()=>{
+    // migrate swipe favorite from extra to swipe info
+    {
+        chat.forEach((mes,mesIdx)=>{
+            if (mes.swipe_info?.length) {
+                mes.swipe_info.forEach((swipe, swipeIdx)=>{
+                    if (swipe.extra && Object.prototype.hasOwnProperty.call(swipe.extra, 'isFavorite')) {
+                        log('[FAV->]', mesIdx, swipeIdx, swipe.extra.isFavorite);
+                        swipe.isFavorite = true;
+                        delete swipe.extra.isFavorite;
+                    }
+                });
+            }
+        });
+    }
     makeSwipeDom();
     addSwipesButtons();
 };
