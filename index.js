@@ -22,6 +22,7 @@ if (!extension_settings.moreFlexibleContinues) {
     extension_settings.moreFlexibleContinues = {
         buttonsTop: true,
         buttonsBottom: true,
+        hotkey: ''
     };
 }
 settings = extension_settings.moreFlexibleContinues;
@@ -106,6 +107,16 @@ const onHover = ()=>{
     }
 };
 
+document.body.addEventListener('keyup', function (e) {
+    if(e.code == settings.hotkey)
+    {
+        console.log('[MFC] Hotkey Detected');
+        if(last_regen)
+            last_regen.click();
+    }
+});
+
+let last_regen = null;
 const buildSwipeDom = (mfc, el)=>{
     const dom = document.createElement('div'); {
         dom.classList.add('mfc--root');
@@ -195,6 +206,7 @@ const buildSwipeDom = (mfc, el)=>{
                 }
             });
             dom.append(regen);
+            last_regen = regen;
         }
         const swipesTrigger = document.createElement('span'); {
             swipesTrigger.classList.add('mfc--swipes');
@@ -354,7 +366,12 @@ const updateFav = (mesId)=>{
     favButtons.forEach(it=>it.classList[isFav ? 'add' : 'remove']('mfc--isFav'));
 };
 
+let patchid = 0;
 const onMessageDone = async(mesIdx)=>{
+    if(mesIdx)
+        patchid=mesIdx;
+    else
+        mesIdx=patchid;
     addSwipesButton(mesIdx, true);
     makeSwipeDom();
     const mes = chat[mesIdx];
@@ -590,6 +607,8 @@ eventSource.on(event_types.APP_READY, ()=>{
                     <label class="flex-container">
                         <input type="checkbox" id="mfc--buttonsBottom"> <span>Show buttons at the bottom of a message</span>
                     </label>
+                    <label for="mfc--refreshHotkey" class="flex-container"><span>Refresh Hotkey</span></label>
+                    <input type="text" id="mfc--refreshHotkey" class="text_pole textarea_compact"> <a href="https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values">Cheat Sheet</a>
 				</div>
 			</div>
 		</div>
@@ -612,6 +631,13 @@ eventSource.on(event_types.APP_READY, ()=>{
             settings.buttonsBottom = bot.checked;
             saveSettingsDebounced();
             makeSwipeDom();
+        });
+
+        const hotkey_txt = document.querySelector('#mfc--refreshHotkey');
+        hotkey_txt.value = settings.hotkey ?? '';
+        hotkey_txt.addEventListener('change',()=>{
+            settings.hotkey = hotkey_txt.value;
+            saveSettingsDebounced();
         });
     };
     addSettings();
